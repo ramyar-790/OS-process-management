@@ -1,0 +1,1429 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Process Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+      :root {
+        --bg1: #020617;
+        --bg2: #0f172a;
+        --card: #111827;
+        --accent: #38bdf8;
+        --accent2: #a78bfa;
+        --yellow: #facc15;
+        --green: #22c55e;
+        --red: #ef4444;
+        --orange: #fb923c;
+        --pink: #fb7185;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, var(--bg1), var(--bg2));
+        color: var(--text);
+        overflow-x: hidden;
+      }
+
+      .slide {
+        min-height: 100vh;
+        padding: 70px 40px;
+        display: none;
+        animation: fade 0.9s ease;
+      }
+
+      .slide.active {
+        display: block;
+      }
+
+      @keyframes fade {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: var(--accent);
+        margin-bottom: 10px;
+      }
+
+      p {
+        max-width: 1100px;
+        line-height: 1.9;
+        font-size: 1.08rem;
+        color: #e2e8f0;
+      }
+
+      .small {
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .box {
+        background: rgba(17, 24, 39, 0.82);
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        border-left: 6px solid var(--accent);
+        padding: 22px;
+        border-radius: 18px;
+        margin-top: 20px;
+        max-width: 1100px;
+        box-shadow: 0 0 25px rgba(56, 189, 248, 0.12);
+      }
+
+      .box.purple {
+        border-left: 6px solid var(--accent2);
+      }
+      .box.green {
+        border-left: 6px solid var(--green);
+      }
+      .box.orange {
+        border-left: 6px solid var(--orange);
+      }
+      .box.red {
+        border-left: 6px solid var(--red);
+      }
+      .box.pink {
+        border-left: 6px solid var(--pink);
+      }
+
+      ul {
+        line-height: 1.85;
+      }
+      li {
+        margin-bottom: 7px;
+      }
+
+      .highlight {
+        color: var(--yellow);
+        font-weight: 900;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.15);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        color: var(--accent);
+        font-weight: 700;
+        margin-top: 10px;
+        margin-right: 8px;
+      }
+
+      table {
+        width: 100%;
+        max-width: 1100px;
+        border-collapse: collapse;
+        margin-top: 20px;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+      }
+
+      th,
+      td {
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        padding: 12px;
+        text-align: center;
+      }
+
+      th {
+        background: #020617;
+        color: var(--accent);
+        font-weight: 900;
+      }
+
+      td {
+        background: rgba(15, 23, 42, 0.75);
+        color: #e2e8f0;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid rgba(148, 163, 184, 0.2);
+        margin: 35px 0;
+        max-width: 1100px;
+      }
+
+      /* controls */
+      .controls {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 999;
+      }
+
+      button {
+        padding: 14px 20px;
+        border: none;
+        border-radius: 14px;
+        background: var(--yellow);
+        color: #020617;
+        font-weight: 900;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      button:hover {
+        transform: scale(1.05);
+      }
+
+      button.secondary {
+        background: #1e293b;
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+      }
+
+      button.danger {
+        background: var(--red);
+        color: white;
+      }
+
+      /* diagrams */
+      .diagram {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 22px;
+        max-width: 1100px;
+      }
+
+      .node {
+        padding: 18px 20px;
+        border-radius: 16px;
+        font-weight: 900;
+        text-align: center;
+        min-width: 160px;
+        background: rgba(56, 189, 248, 0.18);
+        border: 1px solid rgba(56, 189, 248, 0.28);
+        color: #e2e8f0;
+        box-shadow: 0 0 16px rgba(56, 189, 248, 0.1);
+        animation: pop 0.9s ease;
+        position: relative;
+      }
+
+      .node.green {
+        background: rgba(34, 197, 94, 0.18);
+        border: 1px solid rgba(34, 197, 94, 0.35);
+      }
+      .node.orange {
+        background: rgba(251, 146, 60, 0.18);
+        border: 1px solid rgba(251, 146, 60, 0.35);
+      }
+      .node.purple {
+        background: rgba(167, 139, 250, 0.18);
+        border: 1px solid rgba(167, 139, 250, 0.35);
+      }
+      .node.red {
+        background: rgba(239, 68, 68, 0.18);
+        border: 1px solid rgba(239, 68, 68, 0.35);
+      }
+
+      @keyframes pop {
+        from {
+          transform: scale(0.7);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .arrow {
+        font-size: 2rem;
+        color: var(--yellow);
+        font-weight: 900;
+        margin: auto 8px;
+        animation: blink 1.4s infinite;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      /* process state flow */
+      .stateFlow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 25px;
+        max-width: 1100px;
+        align-items: center;
+      }
+
+      .state {
+        padding: 18px 20px;
+        border-radius: 18px;
+        font-weight: 900;
+        min-width: 160px;
+        text-align: center;
+        background: rgba(17, 24, 39, 0.8);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.35);
+        animation: pop 0.9s ease;
+      }
+
+      .state.new {
+        border-left: 6px solid var(--accent);
+      }
+      .state.ready {
+        border-left: 6px solid var(--yellow);
+      }
+      .state.running {
+        border-left: 6px solid var(--green);
+      }
+      .state.waiting {
+        border-left: 6px solid var(--orange);
+      }
+      .state.terminated {
+        border-left: 6px solid var(--red);
+      }
+
+      /* PCB diagram */
+      .pcb {
+        margin-top: 25px;
+        max-width: 1100px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+      }
+
+      .pcbItem {
+        background: rgba(15, 23, 42, 0.78);
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 0 16px rgba(56, 189, 248, 0.08);
+        animation: pop 0.9s ease;
+      }
+
+      .pcbItem h3 {
+        margin: 0 0 8px 0;
+        color: var(--yellow);
+      }
+
+      /* context switch animation */
+      .switchBox {
+        margin-top: 25px;
+        max-width: 1100px;
+        padding: 22px;
+        border-radius: 18px;
+        background: rgba(2, 6, 23, 0.75);
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        box-shadow: 0 0 22px rgba(56, 189, 248, 0.1);
+      }
+
+      .cpuRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+      }
+
+      .cpu {
+        flex: 1;
+        min-width: 240px;
+        padding: 18px;
+        border-radius: 16px;
+        text-align: center;
+        font-weight: 900;
+        background: rgba(56, 189, 248, 0.2);
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        box-shadow: 0 0 16px rgba(56, 189, 248, 0.15);
+      }
+
+      .cpu span {
+        color: var(--yellow);
+        font-size: 1.15rem;
+      }
+
+      .reg {
+        flex: 1;
+        min-width: 260px;
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(34, 197, 94, 0.16);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+
+      .reg b {
+        color: var(--green);
+      }
+
+      .step {
+        margin-top: 14px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        color: #e2e8f0;
+        font-weight: 700;
+        animation: fade 0.8s ease;
+      }
+
+      /* IPC */
+      .ipcGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+        margin-top: 25px;
+        max-width: 1100px;
+      }
+
+      .ipcCard {
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(17, 24, 39, 0.82);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+        animation: pop 0.9s ease;
+      }
+
+      .ipcCard h3 {
+        color: var(--accent2);
+      }
+
+      /* thread model diagram */
+      .model {
+        margin-top: 25px;
+        max-width: 1100px;
+        padding: 20px;
+        border-radius: 18px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+      }
+
+      .modelRow {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        align-items: center;
+      }
+
+      .userBox,
+      .kernelBox {
+        flex: 1;
+        min-width: 260px;
+        padding: 16px;
+        border-radius: 16px;
+        font-weight: 900;
+        text-align: center;
+        border: 1px solid rgba(56, 189, 248, 0.22);
+      }
+
+      .userBox {
+        background: rgba(56, 189, 248, 0.15);
+      }
+      .kernelBox {
+        background: rgba(34, 197, 94, 0.15);
+      }
+
+      .threadChip {
+        display: inline-block;
+        padding: 10px 14px;
+        border-radius: 999px;
+        margin: 6px;
+        background: rgba(251, 146, 60, 0.2);
+        border: 1px solid rgba(251, 146, 60, 0.35);
+        color: #fb923c;
+        font-weight: 900;
+        animation: pop 0.8s ease;
+      }
+
+      .kchip {
+        background: rgba(34, 197, 94, 0.18);
+        border: 1px solid rgba(34, 197, 94, 0.35);
+        color: #22c55e;
+      }
+
+      .note {
+        margin-top: 18px;
+        max-width: 1100px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- SLIDE 1 -->
+    <div
+      class="slide active"
+      data-voice="
+Welcome to learn Process Management.
+This is one of the most important chapters in Operating System.
+In this project you will learn what is a process, process states, PCB, scheduling basics, context switching, IPC, and threads.
+Everything is explained with diagrams and simple English.
+"
+    >
+      <h1>Process Management</h1>
+
+      <p>
+        This project explains
+        <span class="highlight">Process Management</span> in Operating System
+        with colourful diagrams, examples, and voice guide.
+      </p>
+
+      <div class="box">
+        <h2>Topics Covered in CO2</h2>
+        <ul>
+          <li>What is a Process? (Real-life analogy)</li>
+          <li>Process States (New, Ready, Running, Waiting, Terminated)</li>
+          <li>Process Control Block (PCB) – Diagram + Explanation</li>
+          <li>Process Scheduling – Introduction</li>
+          <li>Context Switching – Step-by-step Animation</li>
+          <li>Inter Process Communication (IPC) – Examples</li>
+          <li>Threads – Concept + Types</li>
+          <li>Thread Models – Many-to-One, One-to-One, Many-to-Many</li>
+          <li>Thread Libraries & Thread Issues</li>
+        </ul>
+      </div>
+
+      <div class="box purple">
+        <h2>Difficult Words (Simple Meaning)</h2>
+        <b>Process:</b> A running program (like YouTube running now)<br /><br />
+        <b>CPU:</b> Brain of computer which executes instructions<br /><br />
+        <b>Scheduler:</b> Person/algorithm that selects next process for CPU<br /><br />
+        <b>Context Switching:</b> CPU changing from one process to another<br /><br />
+        <b>PCB:</b> Process file where OS stores all details of process<br /><br />
+        <b>IPC:</b> Method for processes to talk with each other<br /><br />
+        <b>Thread:</b> Smallest unit of execution inside a process
+      </div>
+
+      <p class="note">
+        💡 Fun Fact: Your phone is running <b>100+ processes</b> at same time
+        even if you open only one app.
+      </p>
+    </div>
+
+    <!-- SLIDE 2 -->
+    <div
+      class="slide"
+      data-voice="
+Now let us understand what is a process.
+A process is not just a program.
+A program is passive, but a process is active.
+A process has execution, memory, and resources.
+We will see real-life analogy for easy understanding.
+"
+    >
+      <h2>What is a Process?</h2>
+
+      <div class="box green">
+        <h3>Definition</h3>
+        <p>
+          A <span class="highlight">Process</span> is a program that is
+          currently executing. It includes:
+        </p>
+        <ul>
+          <li>Program code (instructions)</li>
+          <li>Current activity (Program Counter)</li>
+          <li>CPU registers</li>
+          <li>Memory (stack + heap)</li>
+          <li>Resources (files, I/O devices)</li>
+        </ul>
+      </div>
+
+      <div class="box orange">
+        <h3>Real-life Analogy</h3>
+        <p>
+          <b>Program</b> is like a
+          <span class="highlight">recipe book</span>.<br />
+          <b>Process</b> is like
+          <span class="highlight">cooking the food</span>.
+        </p>
+        <ul>
+          <li>Recipe book = stored instructions</li>
+          <li>Cooking = active execution</li>
+          <li>Gas stove + ingredients = resources</li>
+        </ul>
+      </div>
+
+      <div class="box purple">
+        <h3>Example</h3>
+        <p>When you open <b>Chrome</b>:</p>
+        <ul>
+          <li>Chrome.exe = Program</li>
+          <li>Chrome running with tabs = Process</li>
+          <li>Each tab can create separate process</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 -->
+    <div
+      class="slide"
+      data-voice="
+Now we understand process states.
+A process does not stay in one state always.
+It keeps moving between new, ready, running, waiting, and terminated.
+This is called process life cycle.
+"
+    >
+      <h2>Process States (Life Cycle)</h2>
+
+      <p>
+        Every process in OS moves through different states. This is called
+        <span class="highlight">Process State Diagram</span>.
+      </p>
+
+      <div class="stateFlow">
+        <div class="state new">NEW</div>
+        <div class="arrow">➡</div>
+        <div class="state ready">READY</div>
+        <div class="arrow">➡</div>
+        <div class="state running">RUNNING</div>
+        <div class="arrow">➡</div>
+        <div class="state waiting">WAITING</div>
+        <div class="arrow">➡</div>
+        <div class="state ready">READY</div>
+        <div class="arrow">➡</div>
+        <div class="state terminated">TERMINATED</div>
+      </div>
+
+      <div class="box">
+        <h3>State Meaning (Simple)</h3>
+        <ul>
+          <li><b>New:</b> Process is created (not yet in RAM)</li>
+          <li><b>Ready:</b> Waiting in ready queue for CPU</li>
+          <li><b>Running:</b> CPU is executing the process now</li>
+          <li>
+            <b>Waiting:</b> Process waiting for I/O (keyboard, file, printer)
+          </li>
+          <li><b>Terminated:</b> Process finished execution</li>
+        </ul>
+      </div>
+
+      <div class="box orange">
+        <h3>Real Example</h3>
+        <ul>
+          <li>You open WhatsApp → New</li>
+          <li>WhatsApp loaded into RAM → Ready</li>
+          <li>You use WhatsApp → Running</li>
+          <li>WhatsApp waiting for internet response → Waiting</li>
+          <li>You close WhatsApp → Terminated</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 -->
+    <div
+      class="slide"
+      data-voice="
+Now understand PCB.
+PCB is the most important structure in process management.
+PCB stores all details about process.
+Operating system uses PCB to manage CPU scheduling and context switching.
+"
+    >
+      <h2>Process Control Block (PCB)</h2>
+
+      <div class="box green">
+        <h3>What is PCB?</h3>
+        <p>
+          <span class="highlight">PCB (Process Control Block)</span> is a data
+          structure maintained by OS. It stores complete information of a
+          process.
+        </p>
+        <p class="small">
+          OS cannot remember everything about each process, so it stores details
+          in PCB.
+        </p>
+      </div>
+
+      <div class="box purple">
+        <h3>PCB Diagram (Main Fields)</h3>
+
+        <div class="pcb">
+          <div class="pcbItem">
+            <h3>Process ID (PID)</h3>
+            Unique number given to process.
+          </div>
+
+          <div class="pcbItem">
+            <h3>Process State</h3>
+            New / Ready / Running / Waiting / Terminated.
+          </div>
+
+          <div class="pcbItem">
+            <h3>Program Counter</h3>
+            Address of next instruction to execute.
+          </div>
+
+          <div class="pcbItem">
+            <h3>CPU Registers</h3>
+            Stores temporary CPU values.
+          </div>
+
+          <div class="pcbItem">
+            <h3>Memory Info</h3>
+            Stack, heap, page table, base limit.
+          </div>
+
+          <div class="pcbItem">
+            <h3>Scheduling Info</h3>
+            Priority, queue pointers, CPU time.
+          </div>
+
+          <div class="pcbItem">
+            <h3>I/O Status</h3>
+            List of open files, devices used.
+          </div>
+
+          <div class="pcbItem">
+            <h3>Accounting Info</h3>
+            CPU usage time, user ID, execution stats.
+          </div>
+        </div>
+      </div>
+
+      <div class="box orange">
+        <h3>PCB Real-life Analogy</h3>
+        <p>
+          PCB is like a <span class="highlight">student record file</span> in
+          college.
+        </p>
+        <ul>
+          <li>PID = Student USN</li>
+          <li>Registers = Current marks</li>
+          <li>State = Present/Absent</li>
+          <li>Scheduling info = Class timetable</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SLIDE 5 -->
+    <div
+      class="slide"
+      data-voice="
+Now understand process scheduling.
+CPU is very fast but it can execute only one process at a time.
+So OS uses scheduler to select which process should run next.
+This is called process scheduling.
+"
+    >
+      <h2>Process Scheduling (Introduction)</h2>
+
+      <div class="box">
+        <h3>Why Scheduling is Needed?</h3>
+        <ul>
+          <li>CPU can execute only <b>one process</b> at a time</li>
+          <li>Many processes are waiting in ready queue</li>
+          <li>OS must decide which process gets CPU</li>
+        </ul>
+      </div>
+
+      <div class="box green">
+        <h3>Scheduler Types</h3>
+        <ul>
+          <li><b>Long-Term Scheduler:</b> selects process from disk to RAM</li>
+          <li>
+            <b>Short-Term Scheduler (CPU Scheduler):</b> selects process from
+            ready queue to CPU
+          </li>
+          <li>
+            <b>Medium-Term Scheduler:</b> swaps process in/out (suspension)
+          </li>
+        </ul>
+      </div>
+
+      <div class="box purple">
+        <h3>Key Term: Ready Queue</h3>
+        <p>
+          Ready queue is a list of processes waiting for CPU. Scheduler picks
+          one process from ready queue.
+        </p>
+      </div>
+
+      <div class="diagram">
+        <div class="node">Disk (Jobs)</div>
+        <div class="arrow">➡</div>
+        <div class="node purple">RAM (Ready Queue)</div>
+        <div class="arrow">➡</div>
+        <div class="node green">CPU (Running)</div>
+        <div class="arrow">➡</div>
+        <div class="node orange">I/O Devices</div>
+      </div>
+
+      <p class="note">
+        💡 Interesting Fact: CPU scheduling algorithms decide speed of system.
+        Bad scheduling = slow computer even if CPU is powerful.
+      </p>
+    </div>
+
+    <!-- SLIDE 6 -->
+    <div
+      class="slide"
+      data-voice="
+Now the most important concept: context switching.
+Context switching happens when CPU changes from one process to another.
+Operating system saves current process state in PCB.
+Then loads next process state from PCB.
+This is a costly operation.
+"
+    >
+      <h2>Context Switching</h2>
+
+      <div class="box red">
+        <h3>Definition</h3>
+        <p>
+          <span class="highlight">Context Switching</span> is the process of
+          saving the state of current process and loading the state of another
+          process.
+        </p>
+        <p class="small">
+          It happens when time quantum expires, interrupt occurs, or process
+          goes to waiting state.
+        </p>
+      </div>
+
+      <div class="switchBox">
+        <h3 style="color: #facc15; margin-top: 0">Context Switch Simulation</h3>
+
+        <div class="cpuRow">
+          <div class="cpu">
+            CPU Currently Running: <br />
+            <span id="cpuProcess">P1</span>
+          </div>
+
+          <div class="reg">
+            <b>CPU Registers</b><br /><br />
+            PC = <span id="pcValue">1200</span><br />
+            SP = <span id="spValue">500</span><br />
+            ACC = <span id="accValue">42</span><br />
+          </div>
+        </div>
+
+        <div class="step" id="stepText">
+          Step 1: CPU is executing Process P1.
+        </div>
+
+        <div style="margin-top: 18px">
+          <button onclick="runContextSwitch()" class="secondary">
+            ▶ Run Context Switch
+          </button>
+          <button onclick="resetContextSwitch()" class="secondary">
+            ⟲ Reset
+          </button>
+        </div>
+      </div>
+
+      <div class="box green">
+        <h3>Context Switching Steps</h3>
+        <ol>
+          <li>Interrupt occurs (timer / I/O / system call)</li>
+          <li>OS saves registers + program counter in PCB of old process</li>
+          <li>OS changes state: Running → Ready/Waiting</li>
+          <li>Scheduler selects next process</li>
+          <li>OS loads registers + PC from PCB of new process</li>
+          <li>CPU continues execution from saved point</li>
+        </ol>
+      </div>
+
+      <div class="box orange">
+        <h3>Why Context Switching is Expensive?</h3>
+        <ul>
+          <li>CPU time wasted in saving/loading registers</li>
+          <li>Cache memory becomes less efficient</li>
+          <li>More switching = more overhead</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SLIDE 7 -->
+    <div
+      class="slide"
+      data-voice="
+Now we learn IPC.
+IPC means inter process communication.
+Processes must communicate because one process output can be another process input.
+IPC can be shared memory, message passing, pipes, sockets and signals.
+"
+    >
+      <h2>Inter-Process Communication (IPC)</h2>
+
+      <div class="box">
+        <h3>What is IPC?</h3>
+        <p>
+          <span class="highlight">IPC</span> is the mechanism that allows
+          processes to communicate and share data.
+        </p>
+        <p class="small">
+          Without IPC, processes will work separately and cannot cooperate.
+        </p>
+      </div>
+
+      <div class="ipcGrid">
+        <div class="ipcCard">
+          <h3>1) Pipes</h3>
+          <p>Used for communication between parent-child process.</p>
+          <p class="small">Example: Linux command output → input</p>
+          <p><span class="highlight">ls | grep</span></p>
+        </div>
+
+        <div class="ipcCard">
+          <h3>2) Message Queue</h3>
+          <p>Processes send messages like a mailbox.</p>
+          <p class="small">Example: Chat application server messages.</p>
+        </div>
+
+        <div class="ipcCard">
+          <h3>3) Shared Memory</h3>
+          <p>Processes share same memory region.</p>
+          <p class="small">Fastest IPC method.</p>
+        </div>
+
+        <div class="ipcCard">
+          <h3>4) Sockets</h3>
+          <p>Used for network communication.</p>
+          <p class="small">Example: Browser talking to web server.</p>
+        </div>
+
+        <div class="ipcCard">
+          <h3>5) Signals</h3>
+          <p>Used to notify process.</p>
+          <p class="small">Example: CTRL + C kills process.</p>
+        </div>
+
+        <div class="ipcCard">
+          <h3>6) Semaphores</h3>
+          <p>Used for synchronization.</p>
+          <p class="small">Controls access to shared resource.</p>
+        </div>
+      </div>
+
+      <div class="box green">
+        <h3>Real-life Analogy</h3>
+        <ul>
+          <li><b>Pipes:</b> Water pipe between two houses</li>
+          <li><b>Message Queue:</b> Post office letters</li>
+          <li><b>Shared Memory:</b> Shared notebook in classroom</li>
+          <li><b>Socket:</b> Phone call between two cities</li>
+        </ul>
+      </div>
+
+      <p class="note">
+        💡 Fun Fact: WhatsApp uses sockets + message queue internally.
+      </p>
+    </div>
+
+    <!-- SLIDE 8 -->
+    <div
+      class="slide"
+      data-voice="
+Now we learn threads.
+Thread is called lightweight process.
+A process can have multiple threads.
+Threads share same memory but have separate registers and stack.
+This makes execution faster.
+"
+    >
+      <h2>Threads (Concept)</h2>
+
+      <div class="box green">
+        <h3>What is a Thread?</h3>
+        <p>
+          A <span class="highlight">Thread</span> is the smallest unit of CPU
+          execution inside a process.
+        </p>
+        <ul>
+          <li>Process = Big container</li>
+          <li>Thread = Worker inside process</li>
+        </ul>
+      </div>
+
+      <div class="box purple">
+        <h3>Process vs Thread</h3>
+
+        <table>
+          <tr>
+            <th>Feature</th>
+            <th>Process</th>
+            <th>Thread</th>
+          </tr>
+          <tr>
+            <td>Memory</td>
+            <td>Separate memory</td>
+            <td>Shared memory</td>
+          </tr>
+          <tr>
+            <td>Creation Cost</td>
+            <td>High</td>
+            <td>Low</td>
+          </tr>
+          <tr>
+            <td>Switching</td>
+            <td>Slow (context switch)</td>
+            <td>Fast</td>
+          </tr>
+          <tr>
+            <td>Communication</td>
+            <td>IPC needed</td>
+            <td>Easy (shared memory)</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="box orange">
+        <h3>Real Example</h3>
+        <ul>
+          <li>Chrome process has multiple threads</li>
+          <li>One thread for UI</li>
+          <li>One thread for downloading</li>
+          <li>One thread for video playback</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SLIDE 9 -->
+    <div
+      class="slide"
+      data-voice="
+Threads are of two types.
+User level threads are managed by user library.
+Kernel level threads are managed by operating system.
+Kernel threads are more powerful but heavier.
+User threads are faster but limited.
+"
+    >
+      <h2>Types of Threads</h2>
+
+      <div class="box green">
+        <h3>1) User-Level Threads (ULT)</h3>
+        <ul>
+          <li>Managed by user thread library</li>
+          <li>Kernel does not know about threads</li>
+          <li>Faster creation and switching</li>
+          <li>But if one thread blocks, entire process blocks</li>
+        </ul>
+      </div>
+
+      <div class="box purple">
+        <h3>2) Kernel-Level Threads (KLT)</h3>
+        <ul>
+          <li>Managed by operating system kernel</li>
+          <li>Kernel schedules threads directly</li>
+          <li>More overhead</li>
+          <li>But better concurrency</li>
+        </ul>
+      </div>
+
+      <div class="box orange">
+        <h3>Exam Point (Very Important)</h3>
+        <p>
+          <span class="highlight">ULT is fast</span> but has blocking
+          problem.<br />
+          <span class="highlight">KLT is powerful</span> but overhead is high.
+        </p>
+      </div>
+    </div>
+
+    <!-- SLIDE 10 -->
+    <div
+      class="slide"
+      data-voice="
+Now we learn thread models.
+Thread model means mapping between user threads and kernel threads.
+There are three main models.
+Many to one, one to one, and many to many.
+We will see diagrams.
+"
+    >
+      <h2>Thread Models (Mapping Diagram)</h2>
+
+      <div class="model">
+        <h3 style="color: #facc15; margin-top: 0">Model 1: Many-to-One</h3>
+        <p class="small">Many user threads mapped to one kernel thread.</p>
+
+        <div class="modelRow">
+          <div class="userBox">
+            USER THREADS<br />
+            <span class="threadChip">T1</span>
+            <span class="threadChip">T2</span>
+            <span class="threadChip">T3</span>
+          </div>
+
+          <div class="arrow">➡</div>
+
+          <div class="kernelBox">
+            KERNEL THREAD<br />
+            <span class="threadChip kchip">K1</span>
+          </div>
+        </div>
+
+        <div class="box orange">
+          <b>Problem:</b> If K1 blocks, all user threads stop.
+        </div>
+      </div>
+
+      <div class="model">
+        <h3 style="color: #facc15; margin-top: 0">Model 2: One-to-One</h3>
+        <p class="small">Each user thread has its own kernel thread.</p>
+
+        <div class="modelRow">
+          <div class="userBox">
+            USER THREADS<br />
+            <span class="threadChip">T1</span>
+            <span class="threadChip">T2</span>
+            <span class="threadChip">T3</span>
+          </div>
+
+          <div class="arrow">➡</div>
+
+          <div class="kernelBox">
+            KERNEL THREADS<br />
+            <span class="threadChip kchip">K1</span>
+            <span class="threadChip kchip">K2</span>
+            <span class="threadChip kchip">K3</span>
+          </div>
+        </div>
+
+        <div class="box green">
+          <b>Advantage:</b> True parallelism, best performance.
+        </div>
+      </div>
+
+      <div class="model">
+        <h3 style="color: #facc15; margin-top: 0">Model 3: Many-to-Many</h3>
+        <p class="small">Many user threads mapped to many kernel threads.</p>
+
+        <div class="modelRow">
+          <div class="userBox">
+            USER THREADS<br />
+            <span class="threadChip">T1</span>
+            <span class="threadChip">T2</span>
+            <span class="threadChip">T3</span>
+            <span class="threadChip">T4</span>
+          </div>
+
+          <div class="arrow">➡</div>
+
+          <div class="kernelBox">
+            KERNEL THREADS<br />
+            <span class="threadChip kchip">K1</span>
+            <span class="threadChip kchip">K2</span>
+          </div>
+        </div>
+
+        <div class="box purple"><b>Best Balance:</b> Efficient + scalable.</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11 -->
+    <div
+      class="slide"
+      data-voice="
+Now we learn thread libraries.
+Thread libraries are APIs that programmers use to create and manage threads.
+Common libraries are POSIX pthreads, Windows threads and Java threads.
+"
+    >
+      <h2>Thread Libraries</h2>
+
+      <div class="box green">
+        <h3>What is Thread Library?</h3>
+        <p>
+          A <span class="highlight">Thread Library</span> provides functions to
+          create and manage threads.
+        </p>
+        <p class="small">
+          Programmer uses library functions, OS executes them.
+        </p>
+      </div>
+
+      <div class="box purple">
+        <h3>Common Thread Libraries</h3>
+        <ul>
+          <li><b>Pthreads (POSIX):</b> Used in Linux / UNIX systems</li>
+          <li><b>Windows Threads:</b> Used in Microsoft Windows OS</li>
+          <li><b>Java Threads:</b> Used in Java language (JVM handles)</li>
+        </ul>
+      </div>
+
+      <div class="box orange">
+        <h3>Real Example</h3>
+        <ul>
+          <li>Linux server uses pthreads for web server requests</li>
+          <li>Java uses threads for Android apps</li>
+          <li>Games use multi-threading for graphics + physics</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SLIDE 12 -->
+    <div
+      class="slide"
+      data-voice="
+Now understand common thread issues.
+Threads share memory, so synchronization problems happen.
+Race condition occurs when two threads access same variable at same time.
+Deadlock occurs when threads wait forever.
+Starvation occurs when thread never gets CPU.
+These are very important exam questions.
+"
+    >
+      <h2>Thread Issues (Very Important)</h2>
+
+      <div class="box red">
+        <h3>1) Race Condition</h3>
+        <p>
+          Two threads accessing shared data at same time causes wrong output.
+        </p>
+        <p class="small">
+          Example: Two people updating same bank account balance.
+        </p>
+      </div>
+
+      <div class="box orange">
+        <h3>2) Deadlock</h3>
+        <p>Two threads waiting for each other forever.</p>
+        <p class="small">
+          Example: Train A waiting for Track B, Train B waiting for Track A.
+        </p>
+      </div>
+
+      <div class="box purple">
+        <h3>3) Starvation</h3>
+        <p>Thread waits for CPU for long time due to priority scheduling.</p>
+      </div>
+
+      <div class="box green">
+        <h3>4) Synchronization</h3>
+        <p>Synchronization is controlling access to shared resource.</p>
+        <ul>
+          <li>Semaphore</li>
+          <li>Mutex Lock</li>
+          <li>Monitor</li>
+        </ul>
+      </div>
+
+      <p class="note">
+        💡 Interesting Fact: Many real software bugs happen because of race
+        conditions.
+      </p>
+    </div>
+
+    <!-- SLIDE 13 -->
+    <div
+      class="slide"
+      data-voice="
+Now we add practice questions 
+These questions are importants so
+Try solving by remembering the diagrams and definitions.
+Answers can be written easily using this slide content.
+"
+    >
+      <h1>Practice Questions (Process Management)</h1>
+
+      <div class="box">
+        <h2>Question 1</h2>
+        <p>Define process. Explain program vs process with example.</p>
+      </div>
+
+      <div class="box">
+        <h2>Question 2</h2>
+        <p>Draw and explain process state diagram.</p>
+      </div>
+
+      <div class="box">
+        <h2>Question 3</h2>
+        <p>Explain PCB with neat diagram and fields.</p>
+      </div>
+
+      <div class="box">
+        <h2>Question 4</h2>
+        <p>Explain context switching step by step.</p>
+      </div>
+
+      <div class="box">
+        <h2>Question 5</h2>
+        <p>
+          What is IPC? Explain shared memory and message passing with examples.
+        </p>
+      </div>
+
+      <div class="box">
+        <h2>Question 6</h2>
+        <p>
+          Explain thread models: Many-to-One, One-to-One, Many-to-Many with
+          diagram.
+        </p>
+      </div>
+
+      <div class="box orange">
+        <h2>Exam Tip</h2>
+        <p>
+          Always draw diagram for process state and PCB. Diagram marks are very
+          easy in exams.
+        </p>
+      </div>
+    </div>
+
+    <!-- SLIDE 14 -->
+    <div
+      class="slide"
+      data-voice="
+Now final summary.
+Process is a running program.
+PCB stores all process information.
+Context switching is saving and loading process state.
+IPC allows processes to communicate.
+Threads are lightweight processes.
+Thread models define mapping between user threads and kernel threads.
+"
+    >
+      <h1>Final Summary (CO2 Completed)</h1>
+
+      <div class="box green">
+        <h2>Quick Notes</h2>
+        <ul>
+          <li><b>Process:</b> Running program</li>
+          <li>
+            <b>Process States:</b> New → Ready → Running → Waiting → Ready →
+            Terminated
+          </li>
+          <li>
+            <b>PCB:</b> Stores PID, registers, PC, memory info, state,
+            scheduling info
+          </li>
+          <li><b>Context Switching:</b> Save old state + load new state</li>
+          <li>
+            <b>IPC:</b> Communication between processes (pipe, socket, shared
+            memory)
+          </li>
+          <li><b>Thread:</b> Smallest unit of execution</li>
+          <li><b>Thread Models:</b> Many-to-One, One-to-One, Many-to-Many</li>
+        </ul>
+      </div>
+
+      <div class="box purple">
+        <h2>Most Important Interview Questions</h2>
+        <ul>
+          <li>Difference between program and process?</li>
+          <li>Why PCB is required?</li>
+          <li>Why context switching is costly?</li>
+          <li>Difference between process and thread?</li>
+          <li>Explain race condition and deadlock?</li>
+          <li>Which thread model is best and why?</li>
+        </ul>
+      </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+      <button class="secondary" onclick="prevSlide()">◀ Prev</button>
+      <button onclick="nextSlide()">Next ▶</button>
+      <button class="danger" onclick="stopVoice()">Stop Voice 🔇</button>
+    </div>
+
+    <script>
+      let slides = document.querySelectorAll(".slide");
+      let index = 0;
+
+      function speak(text) {
+        if (!text) return;
+        speechSynthesis.cancel();
+        let utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.9;
+        utter.pitch = 1;
+        speechSynthesis.speak(utter);
+      }
+
+      function showSlide(i) {
+        slides.forEach((s) => s.classList.remove("active"));
+        slides[i].classList.add("active");
+        speak(slides[i].dataset.voice);
+      }
+
+      function nextSlide() {
+        index++;
+        if (index >= slides.length) index = 0;
+        showSlide(index);
+      }
+
+      function prevSlide() {
+        index--;
+        if (index < 0) index = slides.length - 1;
+        showSlide(index);
+      }
+
+      function stopVoice() {
+        speechSynthesis.cancel();
+      }
+
+      /* Context Switch Animation */
+      let step = 0;
+
+      function runContextSwitch() {
+        let cpu = document.getElementById("cpuProcess");
+        let pc = document.getElementById("pcValue");
+        let sp = document.getElementById("spValue");
+        let acc = document.getElementById("accValue");
+        let stepText = document.getElementById("stepText");
+
+        step++;
+
+        if (step === 1) {
+          stepText.innerHTML = "Step 2: Timer interrupt occurs. OS stops P1.";
+        } else if (step === 2) {
+          stepText.innerHTML = "Step 3: OS saves P1 registers into PCB of P1.";
+        } else if (step === 3) {
+          stepText.innerHTML =
+            "Step 4: Scheduler selects next process P2 from ready queue.";
+        } else if (step === 4) {
+          cpu.innerHTML = "P2";
+          pc.innerHTML = "3400";
+          sp.innerHTML = "700";
+          acc.innerHTML = "99";
+          stepText.innerHTML =
+            "Step 5: OS loads P2 PCB data into CPU registers.";
+        } else if (step === 5) {
+          stepText.innerHTML =
+            "Step 6: CPU starts executing P2 from saved instruction.";
+        } else {
+          stepText.innerHTML =
+            "Context switch complete! Click Reset to repeat.";
+        }
+      }
+
+      function resetContextSwitch() {
+        step = 0;
+        document.getElementById("cpuProcess").innerHTML = "P1";
+        document.getElementById("pcValue").innerHTML = "1200";
+        document.getElementById("spValue").innerHTML = "500";
+        document.getElementById("accValue").innerHTML = "42";
+        document.getElementById("stepText").innerHTML =
+          "Step 1: CPU is executing Process P1.";
+      }
+
+      showSlide(0);
+    </script>
+  </body>
+</html>
