@@ -16,10 +16,10 @@ This project for CO2 Process Management chapter in Operating System.
 - Thread Issues (Race condition, Deadlock, Starvation, Synchronization)
 
 
-## languages used all in one file
+## languages used 
 - HTML5
 - CSS3
 - JavaScript
-- Web Speech API (Voice Guide)
+- Web Speech API (Voice Guide) (All in one file)
         live link here  https://ramyar-790.github.io/OS-process-management/
 
